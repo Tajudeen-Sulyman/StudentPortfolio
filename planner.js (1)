@@ -1,8 +1,10 @@
+// Get elements
 const taskInput = document.getElementById("taskInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
 const taskList = document.getElementById("taskList");
 const clearAllBtn = document.getElementById("clearAllBtn");
 
+// Load saved tasks
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
 // Save tasks
@@ -15,10 +17,17 @@ function displayTasks() {
 
     taskList.innerHTML = "";
 
+    if (tasks.length === 0) {
+        taskList.innerHTML =
+            '<li class="list-group-item text-center text-muted">No tasks added yet.</li>';
+        return;
+    }
+
     tasks.forEach(function(task, index) {
 
         const li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.className =
+            "list-group-item d-flex justify-content-between align-items-center";
 
         const taskText = document.createElement("span");
         taskText.textContent = task.text;
@@ -28,29 +37,33 @@ function displayTasks() {
             taskText.style.color = "gray";
         }
 
-        const buttonGroup = document.createElement("div");
+        const btnGroup = document.createElement("div");
 
         const completeBtn = document.createElement("button");
-        completeBtn.textContent = "Complete";
+        completeBtn.innerHTML = "✓";
         completeBtn.className = "btn btn-success btn-sm me-2";
 
-        completeBtn.addEventListener("click", function () {
-            completeTask(index);
-        });
+        completeBtn.onclick = function () {
+            tasks[index].completed = !tasks[index].completed;
+            saveTasks();
+            displayTasks();
+        };
 
         const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Delete";
+        deleteBtn.innerHTML = "Delete";
         deleteBtn.className = "btn btn-danger btn-sm";
 
-        deleteBtn.addEventListener("click", function () {
-            deleteTask(index);
-        });
+        deleteBtn.onclick = function () {
+            tasks.splice(index, 1);
+            saveTasks();
+            displayTasks();
+        };
 
-        buttonGroup.appendChild(completeBtn);
-        buttonGroup.appendChild(deleteBtn);
+        btnGroup.appendChild(completeBtn);
+        btnGroup.appendChild(deleteBtn);
 
         li.appendChild(taskText);
-        li.appendChild(buttonGroup);
+        li.appendChild(btnGroup);
 
         taskList.appendChild(li);
 
@@ -61,15 +74,15 @@ function displayTasks() {
 // Add Task
 addTaskBtn.addEventListener("click", function () {
 
-    const text = taskInput.value.trim();
+    const task = taskInput.value.trim();
 
-    if (text === "") {
-        alert("Please enter a task.");
+    if (task === "") {
+        alert("Please enter a subject or task.");
         return;
     }
 
     tasks.push({
-        text: text,
+        text: task,
         completed: false
     });
 
@@ -77,45 +90,36 @@ addTaskBtn.addEventListener("click", function () {
     displayTasks();
 
     taskInput.value = "";
+    taskInput.focus();
 
 });
 
-// Complete Task
-function completeTask(index) {
+// Press Enter to Add Task
+taskInput.addEventListener("keypress", function(e) {
 
-    tasks[index].completed = !tasks[index].completed;
+    if (e.key === "Enter") {
+        addTaskBtn.click();
+    }
 
-    saveTasks();
-
-    displayTasks();
-
-}
-
-// Delete Task
-function deleteTask(index) {
-
-    tasks.splice(index, 1);
-
-    saveTasks();
-
-    displayTasks();
-
-}
+});
 
 // Clear All Tasks
-clearAllBtn.addEventListener("click", function () {
+clearAllBtn.addEventListener("click", function() {
 
-    if (confirm("Are you sure you want to clear all tasks?")) {
+    if (tasks.length === 0) {
+        alert("No tasks to clear.");
+        return;
+    }
+
+    if (confirm("Clear all tasks?")) {
 
         tasks = [];
-
         saveTasks();
-
         displayTasks();
 
     }
 
 });
 
-// Display tasks on page load
+// Load tasks when page opens
 displayTasks();
